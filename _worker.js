@@ -5,7 +5,7 @@
 //  2) RELAY (default, no key here): forwards the chat to the existing backend UPSTREAM (radd-ai.sites.tab.bot),
 //     which holds the model key. RADD_PROXY_KEY (secret) lets the upstream apply per-visitor limits.
 // Contact: /whatsapp redirects to WA_LINK (env var WA_LINK overrides the constant below) — swap the link in ONE place.
-const WA_LINK = "https://www.facebook.com/profile.php?id=61595581934397"; // temporary: Facebook page, until the WhatsApp Business short link (wa.me/message/…) is set
+const WA_LINK = "https://raddzaki.com/"; // no public WhatsApp contact yet (Ayoub: buttons inactive; Tab contacts businesses itself). Set the env var WA_LINK to a client's number/link later.
 const UPSTREAM = "https://radd-ai.sites.tab.bot";
 // Canonical home. Old/alternate hosts 301 here, path and query kept (API calls are still served so already-open pages keep working).
 const SITE = "https://raddzaki.com";
