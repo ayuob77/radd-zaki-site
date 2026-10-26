@@ -5,7 +5,7 @@
 //  2) RELAY (default, no key here): forwards the chat to the existing backend UPSTREAM (radd-ai.sites.tab.bot),
 //     which holds the model key. RADD_PROXY_KEY (secret) lets the upstream apply per-visitor limits.
 // Contact: /whatsapp redirects to WA_LINK (env var WA_LINK overrides the constant below) — swap the link in ONE place.
-const WA_LINK = "https://www.facebook.com/profile.php?id=61595581934397"; // temporary: Facebook page, until the WhatsApp Business short link (wa.me/message/…) is set
+const WA_LINK = "https://wa.me/12512765320?text=" + encodeURIComponent("مرحباً، جربت نموذج رد ذكي وأبغى أعرف التفاصيل"); // Tab's WhatsApp (Ayoub's assistant), generic prefilled text; per-business demo pages use their own text
 const UPSTREAM = "https://radd-ai.sites.tab.bot";
 // Canonical home. Old/alternate hosts 301 here, path and query kept (API calls are still served so already-open pages keep working).
 const SITE = "https://raddzaki.com";
@@ -68,7 +68,11 @@ async function demoPage(request, env, slug) {
   }
   const title = "تجربة «رد ذكي» لـ" + p.name;
   const desc = "مساعد ذكي تجريبي جهزناه لـ" + p.name + " من معلوماتكم المنشورة، يرد على زبائنكم ٢٤ ساعة. جرّبوه مجاناً.";
+<<<<<<< Updated upstream
   const url = SITE + "/d/" + slug;
+=======
+  const url = new URL(request.url).origin + "/d/" + slug;
+>>>>>>> Stashed changes
   const set = (v) => ({ element(e) { e.setAttribute("content", v); } });
   const res = new HTMLRewriter()
     .on("title", { element(e) { e.setInnerContent(title); } })
@@ -76,7 +80,11 @@ async function demoPage(request, env, slug) {
     .on('meta[name="description"]', set(desc))
     .on('meta[property="og:description"]', set(desc))
     .on('meta[property="og:url"]', set(url))
+<<<<<<< Updated upstream
     .on('link[rel="canonical"]', { element(e) { e.setAttribute("href", url); } })
+=======
+    .on('a[data-contact="wa"]', { element(e) { e.setAttribute("href", "https://wa.me/12512765320?text=" + encodeURIComponent("مرحباً، أنا من " + p.name + " وجربت نموذج رد ذكي الخاص بنا (رمز: " + slug + ") وأبغى أعرف التفاصيل والأسعار")); } })
+>>>>>>> Stashed changes
     .transform(page);
   const h = new Headers(res.headers); h.set("content-type", "text/html; charset=utf-8"); h.set("cache-control", "public, max-age=300"); h.set("x-robots-tag", "noindex");
   return new Response(res.body, { status: 200, headers: h });
