@@ -109,3 +109,8 @@ h2{font-size:clamp(24px,6vw,34px);margin:0 0 6px;text-align:center}
 .cta .btn-tg{box-shadow:0 6px 16px rgba(0,0,0,.18);margin-bottom:10px}
 .top-actions{display:flex;gap:8px;align-items:center}
 .foot-tg{margin:6px 0 0}.foot-tg a{color:#229ED9;font-weight:700;white-space:nowrap}
+
+/* WhatsApp channel follow link (not a chat number) */
+.btn-wach{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:#fff}.btn-wach:hover{background:#1ebe5b}.btn-wach .wa-ico{flex:none}
+.cta .btn-wach{box-shadow:0 6px 16px rgba(0,0,0,.18);margin-top:10px}
+.foot-wach{margin:8px 0 0}.foot-wach a{display:inline-flex;align-items:center;gap:6px;color:#128C7E;font-weight:700;text-decoration:none}.foot-wach .wa-ico{width:18px;height:18px;color:#25D366}
