@@ -86,3 +86,17 @@ h2{font-size:clamp(24px,6vw,34px);margin:0 0 6px;text-align:center}
 .mail-contact a{color:#fff;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 .mail-contact bdi{white-space:nowrap}
 .foot-mail{margin:6px 0 0}.foot-mail a{color:var(--g);font-weight:700;white-space:nowrap}
+
+/* per-business demo pages (/d/<slug>) */
+.dz{padding-top:22px}
+.dz .eyebrow{text-align:center;margin:0 0 4px}
+.dz-title{font-size:1.55rem;line-height:1.45;text-align:center;margin:0 0 8px}
+.dz-facts{max-width:430px;margin:16px auto 0;background:var(--card);border-radius:14px;padding:10px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06);font-size:.95rem}
+.dz-facts summary{cursor:pointer;font-weight:700;color:var(--g)}
+.dz-facts ul{margin:8px 0 0;padding:0 18px 0 0}
+.dz-facts li{margin:4px 0;overflow-wrap:anywhere}
+.dz-src{color:var(--mut);font-size:.85rem;margin:8px 0 2px;overflow-wrap:anywhere}
+.dz-points{list-style:none;padding:0;margin:0 auto 16px;max-width:430px;text-align:right}
+.dz-points li{padding:4px 0}
+.dz-points li::before{content:"✓ ";color:var(--gold);font-weight:700}
+.dz-missing{max-width:520px;margin:40px auto;text-align:center;padding:0 16px}

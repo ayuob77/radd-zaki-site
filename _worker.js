@@ -40,6 +40,44 @@ function systemFor(key) {
   return SYSTEM_TEMPLATE.replaceAll("@@BOT@@", b.bot).replaceAll("@@NAME@@", b.name).replaceAll("@@INFO@@", b.info);
 }
 
+// Per-business demos: /d/<slug> page + /demos/<slug>.json profile (name, bot, info, hello, chips…).
+const DEMO_SLUG = /^[a-z0-9-]{2,60}$/;
+async function loadDemo(env, request, slug) {
+  if (!DEMO_SLUG.test(slug)) return null;
+  try {
+    const r = await env.ASSETS.fetch(new Request(new URL("/demos/" + slug + ".json", request.url).toString()));
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (!d || !d.name || !d.info) return null;
+    return { name: String(d.name).slice(0, 120), bot: String(d.bot || ("مساعد " + d.name)).slice(0, 120), info: String(d.info).slice(0, 8000), d };
+  } catch { return null; }
+}
+function systemForDemo(p) {
+  return SYSTEM_TEMPLATE.replaceAll("@@BOT@@", p.bot).replaceAll("@@NAME@@", p.name).replaceAll("@@INFO@@", p.info);
+}
+const escAttr = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+async function demoPage(request, env, slug) {
+  const p = await loadDemo(env, request, slug);
+  const page = await env.ASSETS.fetch(new Request(new URL("/demo.html", request.url).toString()));
+  if (!p) {
+    const nf = await env.ASSETS.fetch(new Request(new URL("/404.html", request.url).toString()));
+    return new Response(nf.body, { status: 404, headers: { "content-type": "text/html; charset=utf-8" } });
+  }
+  const title = "تجربة «رد ذكي» لـ" + p.name;
+  const desc = "مساعد ذكي تجريبي جهزناه لـ" + p.name + " من معلوماتكم المنشورة، يرد على زبائنكم ٢٤ ساعة. جرّبوه مجاناً.";
+  const url = "https://radd.riyalbyriyal.app/d/" + slug;
+  const set = (v) => ({ element(e) { e.setAttribute("content", v); } });
+  const res = new HTMLRewriter()
+    .on("title", { element(e) { e.setInnerContent(title); } })
+    .on('meta[property="og:title"]', set(title))
+    .on('meta[name="description"]', set(desc))
+    .on('meta[property="og:description"]', set(desc))
+    .on('meta[property="og:url"]', set(url))
+    .transform(page);
+  const h = new Headers(res.headers); h.set("content-type", "text/html; charset=utf-8"); h.set("cache-control", "public, max-age=300"); h.set("x-robots-tag", "noindex");
+  return new Response(res.body, { status: 200, headers: h });
+}
+
 // Small key-value layer over the site's D1 database (env.DB).
 let dbReady = null;
 function store(env) {
@@ -165,12 +203,25 @@ async function handleChat(request, env) {
   const raw = await request.text();
   if (raw.length > 20000) return json({ error: "bad_request" }, 400);
   if (!getConfig(env)) {
-    try { return await relay(request, env, "/api/chat", raw); }
+    let fwd = raw;
+    try {
+      const b0 = JSON.parse(raw);
+      const bz = String((b0 && b0.biz) || "");
+      if (bz.startsWith("d:")) {
+        const p = await loadDemo(env, request, bz.slice(2));
+        if (!p) return json({ error: "bad_business" }, 400);
+        fwd = JSON.stringify({ ...b0, demo: { name: p.name, bot: p.bot, info: p.info } });
+      }
+    } catch { return json({ error: "bad_request" }, 400); }
+    try { return await relay(request, env, "/api/chat", fwd); }
     catch (e) { return json({ error: "relay_error", reply: "صار ضغط بسيط على النظام، جرّب ترسل رسالتك مرة ثانية 🙏" }, 502); }
   }
   let body; try { body = JSON.parse(raw); } catch { return json({ error: "bad_request" }, 400); }
   const biz = String(body.biz || "");
-  if (!BIZ[biz]) return json({ error: "bad_business" }, 400);
+  let sys = null;
+  if (BIZ[biz]) sys = systemFor(biz);
+  else if (biz.startsWith("d:")) { const p = await loadDemo(env, request, biz.slice(2)); if (p) sys = systemForDemo(p); }
+  if (!sys) return json({ error: "bad_business" }, 400);
   const msgs = cleanHistory(body.messages);
   if (!msgs) return json({ error: "bad_messages" }, 400);
   const cfg = getConfig(env);
@@ -181,7 +232,7 @@ async function handleChat(request, env) {
   if (limited) return json({ error: "rate_limited", reply: "وصلت للحد المسموح في العرض التجريبي لهذا اليوم 🙏 تواصل معنا ونجهز لك بوتك الخاص." }, 429);
   try {
     const t0 = Date.now();
-    const out = await callModel(cfg, systemFor(biz), msgs);
+    const out = await callModel(cfg, sys, msgs);
     const u = out.usage || {};
     return json({ reply: tidy(out.text) }, 200, { "x-radd-mode": "direct", "x-radd-ms": String(Date.now() - t0), "x-radd-model": out.model, "x-radd-variant": out.variant || "", "x-radd-tokens": [u.promptTokenCount, u.candidatesTokenCount, u.thoughtsTokenCount].join("/") });
   } catch (e) {
@@ -198,6 +249,9 @@ export default {
       try { const r = await relay(request, env, "/api/status"); const j = await r.json(); return json({ ...j, mode: "relay" }); }
       catch { return json({ ready: false, mode: "relay" }, 502); }
     }
+    const dm = url.pathname.match(/^\/d\/([a-z0-9-]{2,60})\/?$/);
+    if (dm) return demoPage(request, env, dm[1]);
+    if (url.pathname === "/demo.html") return new Response("Not found", { status: 404 });
     if (url.pathname === "/whatsapp" || url.pathname === "/whatsapp/") return Response.redirect(env.WA_LINK || WA_LINK, 302);
     if (url.pathname.startsWith("/api/")) return json({ error: "not_found" }, 404);
     if (/^\/(setup(\.html)?|_worker\.js)$/.test(url.pathname)) return new Response("Not found", { status: 404 });
