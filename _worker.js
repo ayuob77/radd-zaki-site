@@ -205,6 +205,16 @@ function tidy(text) {
   return text.replace(/\*\*/g, "").replace(/^#+\s*/gm, "").replace(/\n{3,}/g, "\n\n").trim();
 }
 
+// Ayoub's rule (Oct 27 2026): reply in the customer's language (EN→EN, AR→AR, default Arabic); digits always English.
+function langHint(msgs) {
+  const last = [...(msgs || [])].reverse().find((m) => m && m.role === "user");
+  const t = String((last && (last.content ?? last.text)) || "");
+  const lat = (t.match(/[A-Za-z]/g) || []).length, ar = (t.match(/[\u0600-\u06FF]/g) || []).length;
+  return lat >= 3 && lat > ar
+    ? "\n\nملاحظة مهمة: آخر رسالة من الزبون بالإنجليزي، فردّ عليه بالإنجليزي كاملاً. IMPORTANT: the customer wrote in English, so reply in English. Write all numbers with digits 0-9."
+    : "\n\nملاحظة: آخر رسالة من الزبون بالعربي (أو غير واضحة)، فردّ بالعربي، والأرقام بالأرقام الإنجليزية 0-9.";
+}
+
 async function handleChat(request, env) {
   const raw = await request.text();
   if (raw.length > 20000) return json({ error: "bad_request" }, 400);
@@ -238,7 +248,7 @@ async function handleChat(request, env) {
   if (limited) return json({ error: "rate_limited", reply: "وصلت للحد المسموح في العرض التجريبي لهذا اليوم 🙏 تواصل معنا ونجهز لك بوتك الخاص." }, 429);
   try {
     const t0 = Date.now();
-    const out = await callModel(cfg, sys, msgs);
+    const out = await callModel(cfg, sys + langHint(msgs), msgs);
     const u = out.usage || {};
     return json({ reply: tidy(out.text) }, 200, { "x-radd-mode": "direct", "x-radd-ms": String(Date.now() - t0), "x-radd-model": out.model, "x-radd-variant": out.variant || "", "x-radd-tokens": [u.promptTokenCount, u.candidatesTokenCount, u.thoughtsTokenCount].join("/") });
   } catch (e) {
