@@ -7,6 +7,9 @@
 // Contact: /whatsapp redirects to WA_LINK (env var WA_LINK overrides the constant below) — swap the link in ONE place.
 const WA_LINK = "https://www.facebook.com/profile.php?id=61595581934397"; // temporary: Facebook page, until the WhatsApp Business short link (wa.me/message/…) is set
 const UPSTREAM = "https://radd-ai.sites.tab.bot";
+// Canonical home. Old/alternate hosts 301 here, path and query kept (API calls are still served so already-open pages keep working).
+const SITE = "https://raddzaki.com";
+const REDIRECT_HOSTS = new Set(["radd.riyalbyriyal.app", "www.raddzaki.com", "radd-zaki.pages.dev"]);
 const BIZ = {
  "restaurant": {
   "name": "مطعم ومطبخ السعيدة",
@@ -65,7 +68,7 @@ async function demoPage(request, env, slug) {
   }
   const title = "تجربة «رد ذكي» لـ" + p.name;
   const desc = "مساعد ذكي تجريبي جهزناه لـ" + p.name + " من معلوماتكم المنشورة، يرد على زبائنكم ٢٤ ساعة. جرّبوه مجاناً.";
-  const url = "https://radd.riyalbyriyal.app/d/" + slug;
+  const url = SITE + "/d/" + slug;
   const set = (v) => ({ element(e) { e.setAttribute("content", v); } });
   const res = new HTMLRewriter()
     .on("title", { element(e) { e.setInnerContent(title); } })
@@ -73,6 +76,7 @@ async function demoPage(request, env, slug) {
     .on('meta[name="description"]', set(desc))
     .on('meta[property="og:description"]', set(desc))
     .on('meta[property="og:url"]', set(url))
+    .on('link[rel="canonical"]', { element(e) { e.setAttribute("href", url); } })
     .transform(page);
   const h = new Headers(res.headers); h.set("content-type", "text/html; charset=utf-8"); h.set("cache-control", "public, max-age=300"); h.set("x-robots-tag", "noindex");
   return new Response(res.body, { status: 200, headers: h });
@@ -243,6 +247,9 @@ async function handleChat(request, env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (REDIRECT_HOSTS.has(url.hostname) && !url.pathname.startsWith("/api/")) {
+      return new Response(null, { status: 301, headers: { location: SITE + url.pathname + url.search, "cache-control": "public, max-age=3600" } });
+    }
     if (url.pathname === "/api/chat" && request.method === "POST") return handleChat(request, env);
     if (url.pathname === "/api/status") {
       if (getConfig(env)) return json({ ready: true, mode: "direct" });
