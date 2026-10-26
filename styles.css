@@ -78,3 +78,11 @@ h2{font-size:clamp(24px,6vw,34px);margin:0 0 6px;text-align:center}
 .cta .btn-wa{box-shadow:0 6px 16px rgba(0,0,0,.18)}
 .alt-contact{margin:14px 0 0!important;font-size:15px}.alt-contact a{color:#fff;text-decoration:underline;text-underline-offset:3px}
 .foot-links{margin:4px 0 0}.foot-links a{color:var(--g);font-weight:700}
+
+/* Email (2026-10-26) */
+.ml{width:20px;height:20px;flex:none}
+.mail-contact{display:block;text-align:center;margin:12px 0 0!important;font-size:15px}
+.mail-contact .ml{display:inline-block;vertical-align:-4px;margin-inline-end:6px}
+.mail-contact a{color:#fff;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.mail-contact bdi{white-space:nowrap}
+.foot-mail{margin:6px 0 0}.foot-mail a{color:var(--g);font-weight:700;white-space:nowrap}
