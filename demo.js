@@ -61,7 +61,5 @@
     const ul = $("#dz-facts-list");
     (d.facts || []).forEach((f) => { const li = document.createElement("li"); li.textContent = f; ul.appendChild(li); });
     if (d.source) $("#dz-src").textContent = d.source;
-    const wa = "https://wa.me/12512765320?text=" + encodeURIComponent("مرحباً، أنا من " + d.name + " وجربت نموذج رد ذكي الخاص بنا (رمز: " + slug + ") وأبغى أعرف التفاصيل والأسعار");
-    document.querySelectorAll('a[data-contact="wa"]').forEach((a) => { a.href = wa; });
   }).catch(missing);
 })();
