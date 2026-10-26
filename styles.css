@@ -103,3 +103,5 @@ h2{font-size:clamp(24px,6vw,34px);margin:0 0 6px;text-align:center}
 .btn.is-inactive{opacity:.7;cursor:not-allowed;filter:saturate(.6)}
 .dz-wa-note{color:var(--mut);font-size:.88rem;margin:8px auto 0;max-width:430px}
 .dz-badge{font-size:.85rem;font-weight:700;color:var(--g);background:#e6f2ef;border-radius:999px;padding:6px 12px;white-space:nowrap}
+
+.free-week{display:block;width:fit-content;margin:4px auto 16px;padding:6px 16px;border-radius:999px;background:#fff4d6;color:#7a5200;font-weight:700}
