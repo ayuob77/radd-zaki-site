@@ -114,3 +114,7 @@ h2{font-size:clamp(24px,6vw,34px);margin:0 0 6px;text-align:center}
 .btn-wach{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:#fff}.btn-wach:hover{background:#1ebe5b}.btn-wach .wa-ico{flex:none}
 .cta .btn-wach{box-shadow:0 6px 16px rgba(0,0,0,.18);margin-top:10px}
 .foot-wach{margin:8px 0 0}.foot-wach a{display:inline-flex;align-items:center;gap:6px;color:#128C7E;font-weight:700;text-decoration:none}.foot-wach .wa-ico{width:18px;height:18px;color:#25D366}
+
+.tg-lbl{display:flex;flex-direction:column;align-items:center;line-height:1.25}.tg-url{display:block;font-size:.78em;font-weight:600;opacity:.92;direction:ltr;unicode-bidi:isolate}
+.tg-url-hdr{direction:ltr;unicode-bidi:isolate;font-size:.8em;white-space:nowrap}
+@media (max-width:520px){.site-header .tg-url-hdr,header .tg-url-hdr{display:none}}
