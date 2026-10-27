@@ -118,3 +118,13 @@ h2{font-size:clamp(24px,6vw,34px);margin:0 0 6px;text-align:center}
 .tg-lbl{display:flex;flex-direction:column;align-items:center;line-height:1.25}.tg-url{display:block;font-size:.78em;font-weight:600;opacity:.92;direction:ltr;unicode-bidi:isolate}
 .tg-url-hdr{direction:ltr;unicode-bidi:isolate;font-size:.8em;white-space:nowrap}
 @media (max-width:520px){.site-header .tg-url-hdr,header .tg-url-hdr{display:none}}
+
+/* orders & bookings (2026-10-28) */
+.ops-bar{padding-bottom:0}.chip-ops{background:var(--g);color:#fff;border-color:var(--g);font-weight:600}
+.qr{display:flex;flex-wrap:wrap;gap:6px;align-self:flex-start;max-width:92%}
+.qr-b{font-family:inherit;font-size:14px;padding:7px 12px;border-radius:12px;border:1px solid #c9d8d2;background:#fff;color:var(--g);cursor:pointer;text-decoration:none;line-height:1.4}
+.qr-b.qr-u{background:var(--g);color:#fff;border-color:var(--g)}.qr-b.on{background:#d9fdd3}.qr-b:disabled{opacity:.55;cursor:default}
+.ops-new{max-width:430px;margin:14px auto 0;background:#fff;border:1px solid #d9d2c4;border-radius:16px;padding:14px 16px;text-align:right}
+.ops-new p{margin:0 0 8px}.ops-new-h{font-weight:800;color:var(--g)}.ops-new-s{font-size:14px;color:var(--mut)}.ops-new-n{font-size:13px;color:var(--mut);margin-top:10px!important}
+.ops-owner-btn{display:block;text-align:center;margin-top:6px}
+.ops-feat-note{text-align:center;color:var(--mut);font-size:14px;max-width:640px;margin:14px auto 0}
