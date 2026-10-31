@@ -13,12 +13,26 @@
   if (!/^[a-z0-9]{16}$/.test(sb)) { const a = "abcdefghijkmnpqrstuvwxyz23456789"; sb = [...crypto.getRandomValues(new Uint8Array(16))].map((x) => a[x % a.length]).join(""); localStorage.setItem("radd_sb", sb); }
   let BZ = null, inFlow = false, lastMsg = +(localStorage.getItem("radd_last_" + slug) || 0), polling = null;
   const ownerUrl = () => "https://order.raddzaki.com/owner/" + slug + "#sb=" + sb;
+  // Engine button labels start with an emoji; the UI shows a matching SVG icon instead (design standard: SVG icons only).
+  const EMO = {"❌": "i-x", "🛒": "i-shopping-cart", "📦": "i-package", "✍": "i-pencil-simple", "✏": "i-pencil-simple", "✅": "i-check", "👤": "i-user", "📱": "i-device-mobile", "⏭": "i-skip-back", "↩": "i-arrow-u-up-right", "🛵": "i-moped", "🏪": "i-storefront", "📋": "i-list-bullets", "🗑": "i-trash", "🏠": "i-house", "➕": "i-plus", "📅": "i-calendar-check", "🕓": "i-clock", "📍": "i-map-pin", "🧾": "i-receipt", "💬": "i-chat-circle-dots", "🔔": "i-bell"};
+  const LEAD = /^((?:\p{Extended_Pictographic}|[\u2190-\u21FF\u23E9-\u23FA])[\uFE0F\u200D\p{Extended_Pictographic}]*)\s*/u;
+  function withIcon(el, t) {
+    const m = String(t || "").match(LEAD);
+    const text = m && t.length > m[0].length ? t.slice(m[0].length) : t;
+    if (m && text !== t) {
+      const tpl = document.getElementById(EMO[m[1].replace(/\uFE0F/g, "")] || "");
+      if (tpl) el.appendChild(tpl.content.firstElementChild.cloneNode(true));
+    }
+    const s = document.createElement("span"); s.textContent = text; el.appendChild(s);
+    return text;
+  }
   function qr(buttons) {
     const box = document.createElement("div"); box.className = "qr";
     (buttons || []).flat().forEach((b) => {
       const el = document.createElement(b.url ? "a" : "button");
-      el.className = "qr-b" + (b.url ? " qr-u" : ""); el.textContent = b.t;
-      if (b.url) { el.href = b.url; el.target = "_blank"; el.rel = "noopener"; } else { el.type = "button"; el.addEventListener("click", () => { box.querySelectorAll("button").forEach((x) => x.disabled = true); el.classList.add("on"); opsStep({ v: b.v }, b.t); }); }
+      el.className = "qr-b" + (b.url ? " qr-u" : "");
+      const label = withIcon(el, b.t);
+      if (b.url) { el.href = b.url; el.target = "_blank"; el.rel = "noopener"; } else { el.type = "button"; el.addEventListener("click", () => { box.querySelectorAll("button").forEach((x) => x.disabled = true); el.classList.add("on"); opsStep({ v: b.v }, label); }); }
       box.appendChild(el);
     });
     body.appendChild(box); body.scrollTop = body.scrollHeight;
@@ -122,9 +136,9 @@
     fetch(OPS + "biz/" + slug + "?sb=" + sb).then((r) => r.ok ? r.json() : null).then((j) => {
       if (!j || !j.ok) return; BZ = j.biz; const f = BZ.features || {};
       const acts = [];
-      if (f.orders) acts.push({ t: "اطلب الآن", v: "o", i: "i-cart" });
-      if (f.bookings) acts.push({ t: BZ.type === "restaurant" ? "احجز طاولة" : BZ.type === "realestate" ? "احجز معاينة" : "احجز موعد", v: "b", i: "i-cal" });
-      acts.push({ t: "تابع طلباتي", v: "trk", i: "i-pkg" });
+      if (f.orders) acts.push({ t: "اطلب الآن", v: "o", i: "i-shopping-cart" });
+      if (f.bookings) acts.push({ t: BZ.type === "restaurant" ? "احجز طاولة" : BZ.type === "realestate" ? "احجز معاينة" : "احجز موعد", v: "b", i: "i-calendar-check" });
+      acts.push({ t: "تابع طلباتي", v: "trk", i: "i-package" });
       const bar = $("#ops-bar");
       if (bar) { bar.innerHTML = ""; acts.forEach((a) => { const b = document.createElement("button"); b.type = "button"; b.className = "chip chip-ops";
         const tpl = document.getElementById(a.i); if (tpl) b.appendChild(tpl.content.firstElementChild.cloneNode(true));
