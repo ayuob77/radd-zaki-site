@@ -29,7 +29,7 @@
     el.textContent = text;
     const t = document.createElement("span");
     t.className = "time";
-    t.textContent = new Date().toLocaleTimeString("ar", { hour: "numeric", minute: "2-digit" });
+    t.textContent = new Date().toLocaleTimeString("ar-u-nu-latn", { hour: "numeric", minute: "2-digit" });
     el.appendChild(t);
     body.appendChild(el);
     body.scrollTop = body.scrollHeight;
@@ -58,7 +58,9 @@
   function render() {
     const b = BIZ[biz];
     $("#chat-name").textContent = b.name;
-    $("#chat-avatar").textContent = b.icon;
+    // Avatar mirrors the selected tab's SVG icon (no emoji icons in the UI).
+    const tabIcon = document.querySelector('.tab[data-biz="' + biz + '"] svg');
+    if (tabIcon) $("#chat-avatar").innerHTML = tabIcon.outerHTML; else $("#chat-avatar").textContent = b.name.charAt(0);
     body.innerHTML = "";
     bubble(b.hello, "bot");
     histories[biz].forEach((m) => bubble(m.content, m.role === "user" ? "user" : "bot"));

@@ -6,7 +6,9 @@
   const sendBtn = form.querySelector(".send");
   const h = []; let busy = false, D = null;
   // ---- orders & bookings (order.raddzaki.com engine)
-  const OPS = "https://order.raddzaki.com/api/ops/";
+  // On raddzaki.com the browser talks to the engine directly; on other hosts (previews)
+  // it goes through this site's own /api/ops/ pass-through, because the engine's CORS allows raddzaki.com only.
+  const OPS = location.hostname === "raddzaki.com" ? "https://order.raddzaki.com/api/ops/" : "/api/ops/";
   let sb = localStorage.getItem("radd_sb") || "";
   if (!/^[a-z0-9]{16}$/.test(sb)) { const a = "abcdefghijkmnpqrstuvwxyz23456789"; sb = [...crypto.getRandomValues(new Uint8Array(16))].map((x) => a[x % a.length]).join(""); localStorage.setItem("radd_sb", sb); }
   let BZ = null, inFlow = false, lastMsg = +(localStorage.getItem("radd_last_" + slug) || 0), polling = null;
@@ -32,7 +34,7 @@
     if (r.pass) { inFlow = false; return r; }
     bubble(r.text, "bot");
     const btns = r.buttons || [];
-    if (r.done) btns.splice(btns.length - 1, 0, [{ t: "🧑‍💼 شوف الطلب كصاحب المحل", url: ownerUrl() }]);
+    if (r.done) btns.splice(btns.length - 1, 0, [{ t: "شوف الطلب كصاحب المحل", url: ownerUrl() }]);
     qr(btns);
     inFlow = !!btns.flat().some((b) => b.v === "x");
     if (r.done) startPolling();
@@ -60,7 +62,7 @@
     el.textContent = text;
     const t = document.createElement("span");
     t.className = "time";
-    t.textContent = new Date().toLocaleTimeString("ar", { hour: "numeric", minute: "2-digit" });
+    t.textContent = new Date().toLocaleTimeString("ar-u-nu-latn", { hour: "numeric", minute: "2-digit" });
     el.appendChild(t); body.appendChild(el); body.scrollTop = body.scrollHeight; return el;
   }
   function typing(on) {
@@ -93,13 +95,13 @@
     busy = false; sendBtn.disabled = false;
     if (BZ) {
       const f = BZ.features || {};
-      if (f.bookings && BOOK_RE.test(text)) qr([[{ t: "📅 احجز الحين", v: "b" }]]);
-      else if (f.orders && ORDER_RE.test(text)) qr([[{ t: "🛒 سجّل طلبي الحين", v: "o" }]]);
+      if (f.bookings && BOOK_RE.test(text)) qr([[{ t: "احجز الحين", v: "b" }]]);
+      else if (f.orders && ORDER_RE.test(text)) qr([[{ t: "سجّل طلبي الحين", v: "o" }]]);
     }
   }
   form.addEventListener("submit", (e) => { e.preventDefault(); send(input.value); });
   function missing() {
-    $("#demo").innerHTML = '<div class="dz-missing"><h1 class="dz-title">الرابط غير صحيح</h1><p>ما لقينا هذا العرض التجريبي. جرّب العرض العام في <a href="/">الصفحة الرئيسية</a>.</p></div>';
+    $("#demo").innerHTML = '<div class="container dz-missing"><h1 class="h2">الرابط غير صحيح</h1><p class="body">ما لقينا هذا العرض التجريبي. جرّب العرض العام في <a href="/">الصفحة الرئيسية</a>.</p></div>';
   }
   if (!slug) return missing();
   fetch("/demos/" + slug + ".json", { cache: "no-cache" }).then((r) => r.ok ? r.json() : null).then((d) => {
@@ -108,7 +110,7 @@
     document.title = "تجربة «رد ذكي» لـ" + d.name;
     $("#dz-name").textContent = d.short || d.name;
     $("#chat-name").textContent = d.name;
-    $("#chat-avatar").textContent = d.icon || "💬";
+    $("#chat-avatar").textContent = String(d.short || d.name).trim().charAt(0);
     bubble(d.hello, "bot");
     (d.chips || []).forEach((c) => {
       const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = c;
@@ -120,11 +122,13 @@
     fetch(OPS + "biz/" + slug + "?sb=" + sb).then((r) => r.ok ? r.json() : null).then((j) => {
       if (!j || !j.ok) return; BZ = j.biz; const f = BZ.features || {};
       const acts = [];
-      if (f.orders) acts.push({ t: "🛒 اطلب الآن", v: "o" });
-      if (f.bookings) acts.push({ t: BZ.type === "restaurant" ? "📅 احجز طاولة" : BZ.type === "realestate" ? "📅 احجز معاينة" : "📅 احجز موعد", v: "b" });
-      acts.push({ t: "📦 تابع طلباتي", v: "trk" });
+      if (f.orders) acts.push({ t: "اطلب الآن", v: "o", i: "i-cart" });
+      if (f.bookings) acts.push({ t: BZ.type === "restaurant" ? "احجز طاولة" : BZ.type === "realestate" ? "احجز معاينة" : "احجز موعد", v: "b", i: "i-cal" });
+      acts.push({ t: "تابع طلباتي", v: "trk", i: "i-pkg" });
       const bar = $("#ops-bar");
-      if (bar) { bar.innerHTML = ""; acts.forEach((a) => { const b = document.createElement("button"); b.type = "button"; b.className = "chip chip-ops"; b.textContent = a.t; b.addEventListener("click", () => opsStep({ v: a.v }, a.t)); bar.appendChild(b); }); bar.hidden = false; }
+      if (bar) { bar.innerHTML = ""; acts.forEach((a) => { const b = document.createElement("button"); b.type = "button"; b.className = "chip chip-ops";
+        const tpl = document.getElementById(a.i); if (tpl) b.appendChild(tpl.content.firstElementChild.cloneNode(true));
+        const s = document.createElement("span"); s.textContent = a.t; b.appendChild(s); b.addEventListener("click", () => opsStep({ v: a.v }, a.t)); bar.appendChild(b); }); bar.hidden = false; }
       const ow = $("#ops-owner"); if (ow) ow.href = ownerUrl();
       const nw = $("#ops-new"); if (nw) { nw.hidden = false; $("#ops-new-txt").textContent = f.orders && f.bookings ? "المساعد يستقبل الطلبات ويحجز المواعيد بنفسه، ويوصل إشعار لصاحب المحل، ويرسل للزبون تحديث طلبه وتذكير قبل موعده." : f.orders ? "المساعد يستقبل الطلبات بنفسه (الأصناف، الكمية، العنوان)، ويوصل إشعار لصاحب المحل، ويرسل للزبون تحديث طلبه أول بأول." : "المساعد يحجز المواعيد بنفسه من الأوقات اللي يحددها صاحب النشاط، بدون تعارض، ويرسل للزبون التأكيد وتذكير قبل الموعد."; }
       if (lastMsg) startPolling();

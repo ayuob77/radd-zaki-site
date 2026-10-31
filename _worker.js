@@ -7,6 +7,7 @@
 // Contact: /whatsapp redirects to WA_LINK (env var WA_LINK overrides the constant below) — swap the link in ONE place.
 const WA_LINK = "https://raddzaki.com/"; // no public WhatsApp contact yet (Ayoub: buttons inactive; Tab contacts businesses itself). Set the env var WA_LINK to a client's number/link later.
 const UPSTREAM = "https://radd-ai.sites.tab.bot";
+const OPS_ORIGIN = "https://order.raddzaki.com";
 // Canonical home. Old/alternate hosts 301 here, path and query kept (API calls are still served so already-open pages keep working).
 const SITE = "https://raddzaki.com";
 const REDIRECT_HOSTS = new Set(["radd.riyalbyriyal.app", "www.raddzaki.com", "radd-zaki.pages.dev"]);
@@ -272,6 +273,14 @@ export default {
     if (dm) return demoPage(request, env, dm[1]);
     if (url.pathname === "/demo.html") return new Response("Not found", { status: 404 });
     if (url.pathname === "/whatsapp" || url.pathname === "/whatsapp/") return Response.redirect(env.WA_LINK || WA_LINK, 302);
+    // /api/ops/* → orders & bookings engine, server-side. raddzaki.com pages call the engine directly;
+    // other hosts (preview deploys) use this pass-through because the engine's CORS allows raddzaki.com only.
+    if (url.pathname.startsWith("/api/ops/") && (request.method === "GET" || request.method === "POST")) {
+      const init = { method: request.method, headers: { "content-type": request.headers.get("content-type") || "application/json", "x-radd-client-ip": request.headers.get("cf-connecting-ip") || "" } };
+      if (request.method === "POST") init.body = await request.text();
+      const r = await fetch((env.OPS_ORIGIN || OPS_ORIGIN) + url.pathname + url.search, init);
+      return new Response(r.body, { status: r.status, headers: { "content-type": r.headers.get("content-type") || "application/json; charset=utf-8", "cache-control": "no-store" } });
+    }
     if (url.pathname.startsWith("/api/")) return json({ error: "not_found" }, 404);
     if (/^\/(setup(\.html)?|_worker\.js)$/.test(url.pathname)) return new Response("Not found", { status: 404 });
     return env.ASSETS.fetch(request);
