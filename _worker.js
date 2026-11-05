@@ -261,6 +261,8 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (REDIRECT_HOSTS.has(url.hostname) && !url.pathname.startsWith("/api/")) {
+      // www.raddzaki.com → bare: temporary and uncached while the canonical moves to www (Nov 5 2026), so no browser holds a stale www→bare redirect when bare→www goes live.
+      if (url.hostname === "www.raddzaki.com") return new Response(null, { status: 302, headers: { location: SITE + url.pathname + url.search, "cache-control": "no-store" } });
       return new Response(null, { status: 301, headers: { location: SITE + url.pathname + url.search, "cache-control": "public, max-age=3600" } });
     }
     if (url.pathname === "/api/chat" && request.method === "POST") return handleChat(request, env);
