@@ -8,7 +8,7 @@
   // ---- orders & bookings (order.raddzaki.com engine)
   // On raddzaki.com the browser talks to the engine directly; on other hosts (previews)
   // it goes through this site's own /api/ops/ pass-through, because the engine's CORS allows raddzaki.com only.
-  const OPS = location.hostname === "raddzaki.com" ? "https://order.raddzaki.com/api/ops/" : "/api/ops/";
+  const OPS = /^(www\.)?raddzaki\.com$/.test(location.hostname) ? "https://order.raddzaki.com/api/ops/" : "/api/ops/";
   let sb = localStorage.getItem("radd_sb") || "";
   if (!/^[a-z0-9]{16}$/.test(sb)) { const a = "abcdefghijkmnpqrstuvwxyz23456789"; sb = [...crypto.getRandomValues(new Uint8Array(16))].map((x) => a[x % a.length]).join(""); localStorage.setItem("radd_sb", sb); }
   let BZ = null, inFlow = false, lastMsg = +(localStorage.getItem("radd_last_" + slug) || 0), polling = null;

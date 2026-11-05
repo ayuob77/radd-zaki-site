@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://raddzaki.com/sitemap.xml
+Sitemap: https://www.raddzaki.com/sitemap.xml

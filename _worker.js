@@ -5,12 +5,14 @@
 //  2) RELAY (default, no key here): forwards the chat to the existing backend UPSTREAM (radd-ai.sites.tab.bot),
 //     which holds the model key. RADD_PROXY_KEY (secret) lets the upstream apply per-visitor limits.
 // Contact: /whatsapp redirects to WA_LINK (env var WA_LINK overrides the constant below) — swap the link in ONE place.
-const WA_LINK = "https://raddzaki.com/"; // no public WhatsApp contact yet (Ayoub: buttons inactive; Tab contacts businesses itself). Set the env var WA_LINK to a client's number/link later.
+const WA_LINK = "https://www.raddzaki.com/"; // no public WhatsApp contact yet (Ayoub: buttons inactive; Tab contacts businesses itself). Set the env var WA_LINK to a client's number/link later.
 const UPSTREAM = "https://radd-ai.sites.tab.bot";
 const OPS_ORIGIN = "https://order.raddzaki.com";
-// Canonical home. Old/alternate hosts 301 here, path and query kept (API calls are still served so already-open pages keep working).
-const SITE = "https://raddzaki.com";
-const REDIRECT_HOSTS = new Set(["radd.riyalbyriyal.app", "www.raddzaki.com", "radd-zaki.pages.dev"]);
+// Canonical home: www.raddzaki.com (Ayoub, Nov 5 2026: www looks more professional). Old/alternate hosts — bare raddzaki.com included — 301 here,
+// path and query kept. Not redirected: /api/* (already-open pages keep working) and the ads.txt / app-ads.txt / .well-known files (served on every host).
+const SITE = "https://www.raddzaki.com";
+const REDIRECT_HOSTS = new Set(["radd.riyalbyriyal.app", "raddzaki.com", "radd-zaki.pages.dev"]);
+const NO_REDIRECT = /^\/(api\/|\.well-known\/|ads\.txt$|app-ads\.txt$)/;
 const BIZ = {
  "restaurant": {
   "name": "مطعم ومطبخ السعيدة",
@@ -260,10 +262,8 @@ async function handleChat(request, env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (REDIRECT_HOSTS.has(url.hostname) && !url.pathname.startsWith("/api/")) {
-      // www.raddzaki.com → bare: temporary and uncached while the canonical moves to www (Nov 5 2026), so no browser holds a stale www→bare redirect when bare→www goes live.
-      if (url.hostname === "www.raddzaki.com") return new Response(null, { status: 302, headers: { location: SITE + url.pathname + url.search, "cache-control": "no-store" } });
-      return new Response(null, { status: 301, headers: { location: SITE + url.pathname + url.search, "cache-control": "public, max-age=3600" } });
+    if (REDIRECT_HOSTS.has(url.hostname) && !NO_REDIRECT.test(url.pathname)) {
+      return new Response(null, { status: 301, headers: { location: SITE + url.pathname + url.search, "cache-control": "public, max-age=600" } });
     }
     if (url.pathname === "/api/chat" && request.method === "POST") return handleChat(request, env);
     if (url.pathname === "/api/status") {
@@ -275,7 +275,7 @@ export default {
     if (dm) return demoPage(request, env, dm[1]);
     if (url.pathname === "/demo.html") return new Response("Not found", { status: 404 });
     if (url.pathname === "/whatsapp" || url.pathname === "/whatsapp/") return Response.redirect(env.WA_LINK || WA_LINK, 302);
-    // /api/ops/* → orders & bookings engine, server-side. raddzaki.com pages call the engine directly;
+    // /api/ops/* → orders & bookings engine, server-side. (www.)raddzaki.com pages call the engine directly;
     // other hosts (preview deploys) use this pass-through because the engine's CORS allows raddzaki.com only.
     if (url.pathname.startsWith("/api/ops/") && (request.method === "GET" || request.method === "POST")) {
       const init = { method: request.method, headers: { "content-type": request.headers.get("content-type") || "application/json", "x-radd-client-ip": request.headers.get("cf-connecting-ip") || "" } };
